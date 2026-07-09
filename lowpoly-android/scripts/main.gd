@@ -21,6 +21,7 @@ var echo_status: String = "Record an echo standing on the orange plate."
 
 func _ready() -> void:
 	time_left = level_time
+	_add_runtime_tree_collisions()
 
 	if player.has_method("connect_mobile_controls"):
 		player.connect_mobile_controls(mobile_controls)
@@ -118,3 +119,20 @@ func _update_hud() -> void:
 		objective_label.text = "Portal active! Enter the purple ring."
 	else:
 		objective_label.text = "Use echo + plate to pass the door. Gems: %d / %d" % [gems_collected, total_gems]
+
+func _add_runtime_tree_collisions() -> void:
+	_add_static_box_collision("Tree1TrunkCollision", Vector3(-7, 1.0, -7), Vector3(0.65, 2.0, 0.65))
+	_add_static_box_collision("Tree1LeavesCollision", Vector3(-7, 2.5, -7), Vector3(2.1, 2.0, 2.1))
+	_add_static_box_collision("Tree2TrunkCollision", Vector3(7, 1.0, 6), Vector3(0.65, 2.0, 0.65))
+	_add_static_box_collision("Tree2LeavesCollision", Vector3(7, 2.5, 6), Vector3(2.1, 2.0, 2.1))
+
+func _add_static_box_collision(node_name: String, pos: Vector3, size: Vector3) -> void:
+	var body := StaticBody3D.new()
+	body.name = node_name
+	body.position = pos
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	add_child(body)
