@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://mainprototype001"]
+[gd_scene load_steps=21 format=3 uid="uid://mainprototype001"]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/mobile_controls.tscn" id="2_mobile_controls"]
@@ -45,6 +45,24 @@ emission = Color(0.02, 0.05, 0.1, 1)
 emission_energy_multiplier = 0.5
 roughness = 0.65
 
+[sub_resource type="BoxMesh" id="BoxMesh_prop_block"]
+size = Vector3(2, 1.5, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_prop_block"]
+size = Vector3(2, 1.5, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rock1"]
+size = Vector3(2.4, 1.0, 1.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rock1"]
+size = Vector3(2.4, 1.0, 1.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rock2"]
+size = Vector3(1.8, 0.8, 1.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rock2"]
+size = Vector3(1.8, 0.8, 1.5)
+
 [node name="Main" type="Node3D"]
 script = ExtResource("3_main_script")
 
@@ -86,28 +104,37 @@ shape = SubResource("BoxShape3D_door")
 [node name="PressurePlate" parent="." instance=ExtResource("8_pressure_plate")]
 position = Vector3(-5, 0.12, 8)
 
-[node name="LowPolyBlock" type="CSGBox3D" parent="."]
+[node name="LowPolyBlock" type="StaticBody3D" parent="."]
 position = Vector3(3, 0.75, 5)
-size = Vector3(2, 1.5, 2)
-material = SubResource("StandardMaterial3D_floor")
 
-[node name="LowPolyRamp" type="CSGBox3D" parent="."]
-position = Vector3(-3, 0.5, 4)
-rotation = Vector3(0, 0, 0.35)
-size = Vector3(3, 1, 2)
-material = SubResource("StandardMaterial3D_floor")
+[node name="Mesh" type="MeshInstance3D" parent="LowPolyBlock"]
+mesh = SubResource("BoxMesh_prop_block")
+surface_material_override/0 = SubResource("StandardMaterial3D_floor")
 
-[node name="Rock1" type="CSGBox3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LowPolyBlock"]
+shape = SubResource("BoxShape3D_prop_block")
+
+[node name="Rock1" type="StaticBody3D" parent="."]
 position = Vector3(-8, 0.5, 2)
 rotation = Vector3(0.2, 0.5, 0.1)
-size = Vector3(2.4, 1.0, 1.8)
-material = SubResource("StandardMaterial3D_rock")
 
-[node name="Rock2" type="CSGBox3D" parent="."]
+[node name="Mesh" type="MeshInstance3D" parent="Rock1"]
+mesh = SubResource("BoxMesh_rock1")
+surface_material_override/0 = SubResource("StandardMaterial3D_rock")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Rock1"]
+shape = SubResource("BoxShape3D_rock1")
+
+[node name="Rock2" type="StaticBody3D" parent="."]
 position = Vector3(8, 0.4, -5)
 rotation = Vector3(0.1, 1.0, 0.15)
-size = Vector3(1.8, 0.8, 1.5)
-material = SubResource("StandardMaterial3D_rock")
+
+[node name="Mesh" type="MeshInstance3D" parent="Rock2"]
+mesh = SubResource("BoxMesh_rock2")
+surface_material_override/0 = SubResource("StandardMaterial3D_rock")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Rock2"]
+shape = SubResource("BoxShape3D_rock2")
 
 [node name="Tree1Trunk" type="CSGBox3D" parent="."]
 position = Vector3(-7, 1.0, -7)
