@@ -54,6 +54,9 @@ func _apply_look(delta: Vector2) -> void:
 	pitch = clamp(pitch - delta.y, deg_to_rad(-80), deg_to_rad(80))
 	head.rotation.x = pitch
 
+func get_echo_rotation() -> Vector3:
+	return Vector3(0.0, global_rotation.y, 0.0)
+
 func _on_mobile_move_changed(direction: Vector2) -> void:
 	mobile_move_vector = direction
 
