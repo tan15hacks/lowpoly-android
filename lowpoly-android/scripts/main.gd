@@ -1,13 +1,13 @@
 extends Node3D
 
-@export var level_time: float = 90.0
+@export var level_time: float = 120.0
 
 var gems_collected: int = 0
 var total_gems: int = 0
 var time_left: float = 0.0
 var level_finished: bool = false
 var portal_active: bool = false
-var echo_status: String = "Tap REC to create a 5-second echo."
+var echo_status: String = "Record an echo standing on the orange plate."
 
 @onready var player: CharacterBody3D = $Player
 @onready var mobile_controls: CanvasLayer = $MobileControls
@@ -16,6 +16,8 @@ var echo_status: String = "Tap REC to create a 5-second echo."
 @onready var echo_label: Label = $HUD/EchoLabel
 @onready var portal: Area3D = $Portal
 @onready var echo_recorder: Node = $EchoRecorder
+@onready var pressure_plate: Area3D = $PressurePlate
+@onready var puzzle_door: Node3D = $PuzzleDoor
 
 func _ready() -> void:
 	time_left = level_time
@@ -34,6 +36,11 @@ func _ready() -> void:
 		echo_recorder.recording_finished.connect(_on_echo_recording_finished)
 	if echo_recorder.has_signal("replay_started"):
 		echo_recorder.replay_started.connect(_on_echo_replay_started)
+
+	if pressure_plate.has_signal("plate_pressed"):
+		pressure_plate.plate_pressed.connect(_on_plate_pressed)
+	if pressure_plate.has_signal("plate_released"):
+		pressure_plate.plate_released.connect(_on_plate_released)
 
 	var gems := get_tree().get_nodes_in_group("gems")
 	total_gems = gems.size()
@@ -64,15 +71,27 @@ func _on_record_pressed() -> void:
 		echo_recorder.start_recording()
 
 func _on_echo_recording_started() -> void:
-	echo_status = "Recording echo... move for 5 seconds."
+	echo_status = "Recording... stand on the plate or move for 5 seconds."
 	_update_hud()
 
 func _on_echo_recording_finished(_frames: Array) -> void:
-	echo_status = "Echo recorded. Watch your past self replay it."
+	echo_status = "Echo created. Let it hold the plate, then pass the door."
 	_update_hud()
 
 func _on_echo_replay_started() -> void:
-	echo_status = "Echo replaying."
+	echo_status = "Echo replaying. Use it to solve the door puzzle."
+	_update_hud()
+
+func _on_plate_pressed() -> void:
+	if puzzle_door.has_method("set_open"):
+		puzzle_door.set_open(true)
+	echo_status = "Plate pressed. Door open."
+	_update_hud()
+
+func _on_plate_released() -> void:
+	if puzzle_door.has_method("set_open"):
+		puzzle_door.set_open(false)
+	echo_status = "Plate released. Door closed. Use your echo."
 	_update_hud()
 
 func _on_gem_collected() -> void:
@@ -98,4 +117,4 @@ func _update_hud() -> void:
 	if portal_active:
 		objective_label.text = "Portal active! Enter the purple ring."
 	else:
-		objective_label.text = "Collect gems: %d / %d" % [gems_collected, total_gems]
+		objective_label.text = "Use echo + plate to pass the door. Gems: %d / %d" % [gems_collected, total_gems]
