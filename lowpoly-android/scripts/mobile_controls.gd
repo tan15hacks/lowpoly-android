@@ -4,6 +4,7 @@ signal move_changed(direction: Vector2)
 signal look_changed(delta: Vector2)
 signal jump_pressed
 signal record_pressed
+signal reset_pressed
 
 @export var joystick_radius: float = 95.0
 @export var look_sensitivity: float = 0.009
@@ -15,6 +16,7 @@ var move_vector: Vector2 = Vector2.ZERO
 var last_look_pos: Vector2 = Vector2.ZERO
 var jump_rect: Rect2 = Rect2()
 var record_rect: Rect2 = Rect2()
+var reset_rect: Rect2 = Rect2()
 
 @onready var joystick_base: Control = $JoystickBase
 @onready var joystick_knob: Control = $JoystickBase/JoystickKnob
@@ -23,7 +25,11 @@ var record_rect: Rect2 = Rect2()
 @onready var jump_label: Label = $JumpPanel/Label
 @onready var record_label: Label = $RecordPanel/Label
 
+var reset_panel: ColorRect
+var reset_label: Label
+
 func _ready() -> void:
+	_create_reset_panel()
 	get_viewport().size_changed.connect(_position_buttons)
 	_position_buttons()
 	_reset_joystick()
@@ -42,6 +48,9 @@ func _handle_touch(event: InputEventScreenTouch) -> void:
 			return
 		if record_rect.has_point(event.position):
 			record_pressed.emit()
+			return
+		if reset_rect.has_point(event.position):
+			reset_pressed.emit()
 			return
 		if event.position.x < screen_size.x * 0.5 and move_touch_id == -1:
 			move_touch_id = event.index
@@ -85,8 +94,10 @@ func _position_buttons() -> void:
 	var button_size := Vector2(170, 84)
 	jump_rect = Rect2(Vector2(screen_size.x - button_size.x - 32, screen_size.y - button_size.y - 55), button_size)
 	record_rect = Rect2(Vector2(screen_size.x - button_size.x - 32, screen_size.y - (button_size.y * 2.0) - 85), button_size)
+	reset_rect = Rect2(Vector2(screen_size.x - button_size.x - 32, screen_size.y - (button_size.y * 3.0) - 115), button_size)
 	_apply_panel_rect(jump_panel, jump_label, jump_rect, "JUMP")
 	_apply_panel_rect(record_panel, record_label, record_rect, "REC")
+	_apply_panel_rect(reset_panel, reset_label, reset_rect, "RESET")
 
 func _apply_panel_rect(panel: ColorRect, label: Label, rect: Rect2, text: String) -> void:
 	panel.position = rect.position
@@ -97,3 +108,11 @@ func _apply_panel_rect(panel: ColorRect, label: Label, rect: Rect2, text: String
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+func _create_reset_panel() -> void:
+	reset_panel = ColorRect.new()
+	reset_panel.name = "ResetPanel"
+	add_child(reset_panel)
+	reset_label = Label.new()
+	reset_label.name = "Label"
+	reset_panel.add_child(reset_label)
