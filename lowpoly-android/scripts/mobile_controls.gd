@@ -21,6 +21,8 @@ func _ready() -> void:
 	jump_button.pressed.connect(func() -> void:
 		jump_pressed.emit()
 	)
+	get_viewport().size_changed.connect(_position_jump_button)
+	_position_jump_button()
 	_reset_joystick()
 
 func _input(event: InputEvent) -> void:
@@ -68,3 +70,8 @@ func _update_joystick(pos: Vector2) -> void:
 func _reset_joystick() -> void:
 	joystick_base.visible = false
 	joystick_knob.position = joystick_base.size * 0.5 - joystick_knob.size * 0.5
+
+func _position_jump_button() -> void:
+	var screen_size := get_viewport().get_visible_rect().size
+	var button_size := Vector2(140, 140)
+	jump_button.position = Vector2(screen_size.x - button_size.x - 80, screen_size.y - button_size.y - 90)
