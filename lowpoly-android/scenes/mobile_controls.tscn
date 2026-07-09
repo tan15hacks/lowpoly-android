@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3 uid="uid://mobilecontrols001"]
+
+[ext_resource type="Script" path="res://scripts/mobile_controls.gd" id="1_mobile_controls"]
+
+[sub_resource type="Gradient" id="Gradient_white"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(1, 1, 1, 0.32, 1, 1, 1, 0.32)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_circle"]
+gradient = SubResource("Gradient_white")
+width = 256
+height = 256
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_jump"]
+radius = 70.0
+
+[node name="MobileControls" type="CanvasLayer"]
+script = ExtResource("1_mobile_controls")
+
+[node name="JoystickBase" type="TextureRect" parent="."]
+offset_right = 190.0
+offset_bottom = 190.0
+texture = SubResource("GradientTexture2D_circle")
+stretch_mode = 5
+
+[node name="JoystickKnob" type="TextureRect" parent="JoystickBase"]
+offset_right = 85.0
+offset_bottom = 85.0
+texture = SubResource("GradientTexture2D_circle")
+stretch_mode = 5
+
+[node name="JumpButton" type="TouchScreenButton" parent="."]
+position = Vector2(1220, 520)
+texture_normal = SubResource("GradientTexture2D_circle")
+shape = SubResource("CircleShape2D_jump")
+visibility_mode = 1
