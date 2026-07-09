@@ -28,6 +28,8 @@ func _ready() -> void:
 
 	if mobile_controls.has_signal("record_pressed"):
 		mobile_controls.record_pressed.connect(_on_record_pressed)
+	if mobile_controls.has_signal("reset_pressed"):
+		mobile_controls.reset_pressed.connect(_on_reset_pressed)
 
 	if echo_recorder.has_method("setup"):
 		echo_recorder.setup(player)
@@ -37,6 +39,8 @@ func _ready() -> void:
 		echo_recorder.recording_finished.connect(_on_echo_recording_finished)
 	if echo_recorder.has_signal("replay_started"):
 		echo_recorder.replay_started.connect(_on_echo_replay_started)
+	if echo_recorder.has_signal("recording_blocked"):
+		echo_recorder.recording_blocked.connect(_on_echo_recording_blocked)
 
 	if pressure_plate.has_signal("plate_pressed"):
 		pressure_plate.plate_pressed.connect(_on_plate_pressed)
@@ -62,7 +66,7 @@ func _process(delta: float) -> void:
 	time_left = max(time_left - delta, 0.0)
 	if time_left <= 0.0:
 		level_finished = true
-		objective_label.text = "Time's up!"
+		objective_label.text = "Time's up! Press RESET."
 	_update_hud()
 
 func _on_record_pressed() -> void:
@@ -70,6 +74,9 @@ func _on_record_pressed() -> void:
 		return
 	if echo_recorder.has_method("start_recording"):
 		echo_recorder.start_recording()
+
+func _on_reset_pressed() -> void:
+	get_tree().reload_current_scene()
 
 func _on_echo_recording_started() -> void:
 	echo_status = "Recording... stand on the plate or move for 5 seconds."
@@ -81,6 +88,10 @@ func _on_echo_recording_finished(_frames: Array) -> void:
 
 func _on_echo_replay_started() -> void:
 	echo_status = "Echo replaying. Use it to solve the door puzzle."
+	_update_hud()
+
+func _on_echo_recording_blocked() -> void:
+	echo_status = "Already recording. Wait for the echo to finish."
 	_update_hud()
 
 func _on_plate_pressed() -> void:
@@ -108,7 +119,7 @@ func _on_gem_collected() -> void:
 func _on_portal_entered() -> void:
 	if portal_active and not level_finished:
 		level_finished = true
-		objective_label.text = "LEVEL COMPLETE!"
+		objective_label.text = "LEVEL COMPLETE! Press RESET to replay."
 
 func _update_hud() -> void:
 	timer_label.text = "Time: %02d" % int(ceil(time_left))
