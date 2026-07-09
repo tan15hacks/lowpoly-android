@@ -1,0 +1,34 @@
+[gd_scene load_steps=5 format=3 uid="uid://echoghost001"]
+
+[ext_resource type="Script" path="res://scripts/echo_ghost.gd" id="1_echo_script"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_echo"]
+radius = 0.35
+height = 1.8
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_echo"]
+radius = 0.35
+height = 1.8
+rings = 4
+radial_segments = 8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_echo"]
+albedo_color = Color(0.1, 0.75, 1, 0.35)
+emission_enabled = true
+emission = Color(0.05, 0.45, 1, 1)
+emission_energy_multiplier = 0.8
+transparency = 1
+
+[node name="EchoGhost" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_echo_script")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.9, 0)
+mesh = SubResource("CapsuleMesh_echo")
+surface_material_override/0 = SubResource("StandardMaterial3D_echo")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_echo")
