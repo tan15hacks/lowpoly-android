@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/pressure_plate.gd" id="1_plate_script"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_plate_trigger"]
-size = Vector3(2.2, 0.5, 2.2)
+size = Vector3(2.4, 0.8, 2.4)
 
 [sub_resource type="BoxMesh" id="BoxMesh_plate"]
 size = Vector3(2.0, 0.18, 2.0)
@@ -16,6 +16,8 @@ emission_energy_multiplier = 0.35
 roughness = 0.8
 
 [node name="PressurePlate" type="Area3D"]
+collision_layer = 4
+collision_mask = 3
 script = ExtResource("1_plate_script")
 
 [node name="PlateMesh" type="MeshInstance3D" parent="."]
@@ -23,5 +25,5 @@ mesh = SubResource("BoxMesh_plate")
 surface_material_override/0 = SubResource("StandardMaterial3D_plate")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-position = Vector3(0, 0.25, 0)
+position = Vector3(0, 0.35, 0)
 shape = SubResource("BoxShape3D_plate_trigger")
