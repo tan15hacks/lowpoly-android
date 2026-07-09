@@ -3,6 +3,7 @@ extends CanvasLayer
 signal move_changed(direction: Vector2)
 signal look_changed(delta: Vector2)
 signal jump_pressed
+signal record_pressed
 
 @export var joystick_radius: float = 95.0
 @export var look_sensitivity: float = 0.009
@@ -16,13 +17,17 @@ var last_look_pos: Vector2 = Vector2.ZERO
 @onready var joystick_base: Control = $JoystickBase
 @onready var joystick_knob: Control = $JoystickBase/JoystickKnob
 @onready var jump_button: TouchScreenButton = $JumpButton
+@onready var record_button: TouchScreenButton = $RecordButton
 
 func _ready() -> void:
 	jump_button.pressed.connect(func() -> void:
 		jump_pressed.emit()
 	)
-	get_viewport().size_changed.connect(_position_jump_button)
-	_position_jump_button()
+	record_button.pressed.connect(func() -> void:
+		record_pressed.emit()
+	)
+	get_viewport().size_changed.connect(_position_buttons)
+	_position_buttons()
 	_reset_joystick()
 
 func _input(event: InputEvent) -> void:
@@ -71,7 +76,8 @@ func _reset_joystick() -> void:
 	joystick_base.visible = false
 	joystick_knob.position = joystick_base.size * 0.5 - joystick_knob.size * 0.5
 
-func _position_jump_button() -> void:
+func _position_buttons() -> void:
 	var screen_size := get_viewport().get_visible_rect().size
 	var button_size := Vector2(140, 140)
 	jump_button.position = Vector2(screen_size.x - button_size.x - 80, screen_size.y - button_size.y - 90)
+	record_button.position = Vector2(screen_size.x - button_size.x - 80, screen_size.y - button_size.y - 250)
