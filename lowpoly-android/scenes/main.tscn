@@ -1,0 +1,46 @@
+[gd_scene load_steps=6 format=3 uid="uid://mainprototype001"]
+
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
+size = Vector2(30, 30)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(30, 1, 30)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.25, 0.62, 0.29, 1)
+roughness = 1.0
+
+[node name="Main" type="Node3D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector3(0, 2, 5)
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.872665, 0.785398, 0)
+light_energy = 2.5
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="."]
+
+[node name="FloorMesh" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("PlaneMesh_floor")
+surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+position = Vector3(0, -0.5, 0)
+shape = SubResource("BoxShape3D_floor")
+
+[node name="LowPolyBlock" type="CSGBox3D" parent="."]
+position = Vector3(3, 0.75, 0)
+size = Vector3(2, 1.5, 2)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="LowPolyRamp" type="CSGBox3D" parent="."]
+position = Vector3(-3, 0.5, -2)
+rotation = Vector3(0, 0, 0.35)
+size = Vector3(3, 1, 2)
+material = SubResource("StandardMaterial3D_floor")
