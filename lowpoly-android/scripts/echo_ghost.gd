@@ -14,15 +14,16 @@ var frames: Array = []
 var frame_index: int = 0
 var replay_speed: float = 1.0
 var elapsed: float = 0.0
-var visual_root: Node3D
-var animation_player: AnimationPlayer
-var current_anim: String = ""
 var last_position: Vector3 = Vector3.ZERO
+var current_state: String = ""
+var visuals: Dictionary = {}
+var state_players: Dictionary = {}
+var state_animation_names: Dictionary = {}
 
 @onready var body: MeshInstance3D = $Body
 
 func _ready() -> void:
-	_setup_echo_visual()
+	_setup_echo_visuals()
 
 func start_replay(recorded_frames: Array) -> void:
 	frames = recorded_frames.duplicate(true)
@@ -34,7 +35,7 @@ func start_replay(recorded_frames: Array) -> void:
 		return
 	_apply_frame(frames[0])
 	last_position = global_position
-	_play_anim("idle")
+	_set_visual_state("idle")
 
 func _physics_process(delta: float) -> void:
 	if frames.is_empty():
@@ -47,7 +48,7 @@ func _physics_process(delta: float) -> void:
 
 	if frame_index >= frames.size() - 1:
 		_apply_frame(frames.back())
-		_play_anim("idle")
+		_set_visual_state("idle")
 		replay_finished.emit()
 		queue_free()
 		return
@@ -59,107 +60,110 @@ func _physics_process(delta: float) -> void:
 
 	global_position = current["position"].lerp(next["position"], t)
 	global_rotation = current["rotation"].lerp(next["rotation"], t)
-	_update_echo_animation(delta)
+	_update_echo_state(delta)
 
 func _apply_frame(frame: Dictionary) -> void:
 	global_position = frame["position"]
 	global_rotation = frame["rotation"]
 
-func _setup_echo_visual() -> void:
+func _setup_echo_visuals() -> void:
 	if body:
 		body.visible = false
 
-	if not ResourceLoader.exists(character_model_path):
+	_create_visual_state("idle", idle_animation_path)
+	_create_visual_state("run", run_animation_path)
+	_create_visual_state("jump", jump_animation_path)
+
+	if visuals.is_empty():
+		_create_visual_state("idle", character_model_path)
+
+	if visuals.is_empty():
 		if body:
 			body.visible = true
-		print("Echo skater model missing: ", character_model_path)
+		print("Echo has no valid skater visual assets.")
 		return
 
-	var packed_scene: PackedScene = load(character_model_path)
-	if packed_scene == null:
-		if body:
-			body.visible = true
-		return
+	_set_visual_state("idle")
 
-	visual_root = packed_scene.instantiate() as Node3D
-	visual_root.name = "EchoSkaterCharacter"
-	visual_root.scale = Vector3.ONE * model_scale
-	visual_root.position = Vector3(0, -1.15, -0.18)
-	visual_root.rotation.y = PI
-	add_child(visual_root)
-	_apply_echo_skin(visual_root)
-	_setup_animation_player()
-
-func _setup_animation_player() -> void:
-	animation_player = _find_animation_player(visual_root)
-	if animation_player == null:
-		animation_player = AnimationPlayer.new()
-		animation_player.name = "AnimationPlayer"
-		animation_player.root_node = NodePath("..")
-		visual_root.add_child(animation_player)
-
-	var lib := AnimationLibrary.new()
-	_add_external_animation_to_library(lib, "idle", idle_animation_path, true)
-	_add_external_animation_to_library(lib, "run", run_animation_path, true)
-	_add_external_animation_to_library(lib, "jump", jump_animation_path, false)
-	if lib.get_animation_list().size() > 0:
-		if animation_player.has_animation_library("echo"):
-			animation_player.remove_animation_library("echo")
-		animation_player.add_animation_library("echo", lib)
-		_play_anim("idle")
-
-func _add_external_animation_to_library(target_library: AnimationLibrary, clip_name: String, path: String, loop: bool) -> void:
+func _create_visual_state(state_name: String, path: String) -> void:
 	if not ResourceLoader.exists(path):
-		print("Animation file missing: ", path)
+		print("Echo visual state missing: ", path)
 		return
-	var scene: PackedScene = load(path)
-	if scene == null:
+
+	var packed_scene: PackedScene = load(path)
+	if packed_scene == null:
 		return
-	var instance: Node = scene.instantiate()
-	var source_player: AnimationPlayer = _find_animation_player(instance)
-	if source_player == null:
-		instance.queue_free()
+
+	var instance: Node3D = packed_scene.instantiate() as Node3D
+	if instance == null:
 		return
-	var copied := false
-	for library_name: String in source_player.get_animation_library_list():
-		var source_library: AnimationLibrary = source_player.get_animation_library(library_name)
-		for animation_name: String in source_library.get_animation_list():
-			var animation: Animation = source_library.get_animation(animation_name).duplicate(true)
-			animation.loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
-			target_library.add_animation(clip_name, animation)
-			copied = true
-			break
-		if copied:
-			break
-	instance.queue_free()
+
+	instance.name = "EchoState_" + state_name
+	instance.scale = Vector3.ONE * model_scale
+	instance.position = Vector3(0, -1.15, -0.18)
+	instance.rotation.y = PI
+	instance.visible = false
+	add_child(instance)
+
+	_apply_echo_skin(instance)
+	visuals[state_name] = instance
+
+	var player: AnimationPlayer = _find_animation_player(instance)
+	if player != null:
+		state_players[state_name] = player
+		var animation_names: PackedStringArray = player.get_animation_list()
+		if animation_names.size() > 0:
+			state_animation_names[state_name] = String(animation_names[0])
+
+func _set_visual_state(state_name: String) -> void:
+	if not visuals.has(state_name):
+		state_name = "idle"
+	if not visuals.has(state_name):
+		return
+
+	if current_state == state_name:
+		return
+
+	for key in visuals.keys():
+		var visual_node: Node3D = visuals[key] as Node3D
+		if visual_node != null:
+			visual_node.visible = false
+
+	var active_visual: Node3D = visuals[state_name] as Node3D
+	if active_visual != null:
+		active_visual.visible = true
+
+	current_state = state_name
+	_play_state_animation(state_name)
+
+func _play_state_animation(state_name: String) -> void:
+	if not state_players.has(state_name) or not state_animation_names.has(state_name):
+		return
+	var player: AnimationPlayer = state_players[state_name] as AnimationPlayer
+	var animation_name: String = state_animation_names[state_name]
+	if player != null and player.has_animation(animation_name):
+		player.play(animation_name)
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:
 		return node as AnimationPlayer
-	for child: Node in node.get_children():
+	for child in node.get_children():
 		var found: AnimationPlayer = _find_animation_player(child)
-		if found:
+		if found != null:
 			return found
 	return null
 
-func _update_echo_animation(delta: float) -> void:
+func _update_echo_state(delta: float) -> void:
 	var movement: Vector3 = global_position - last_position
 	var horizontal_speed: float = Vector2(movement.x, movement.z).length() / max(delta, 0.001)
 	var vertical_speed: float = abs(movement.y) / max(delta, 0.001)
-	if vertical_speed > 0.8:
-		_play_anim("jump")
-	elif horizontal_speed > 0.25:
-		_play_anim("run")
-	else:
-		_play_anim("idle")
 
-func _play_anim(name: String) -> void:
-	if animation_player == null or current_anim == name:
-		return
-	var full_name := "echo/" + name
-	if animation_player.has_animation(full_name):
-		animation_player.play(full_name)
-		current_anim = name
+	if vertical_speed > 0.8:
+		_set_visual_state("jump")
+	elif horizontal_speed > 0.25:
+		_set_visual_state("run")
+	else:
+		_set_visual_state("idle")
 
 func _apply_echo_skin(root: Node) -> void:
 	var material := StandardMaterial3D.new()
@@ -179,5 +183,5 @@ func _apply_echo_skin(root: Node) -> void:
 func _apply_material_to_meshes(node: Node, material: Material) -> void:
 	if node is MeshInstance3D:
 		(node as MeshInstance3D).set_surface_override_material(0, material)
-	for child: Node in node.get_children():
+	for child in node.get_children():
 		_apply_material_to_meshes(child, material)
