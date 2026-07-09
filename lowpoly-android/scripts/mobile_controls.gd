@@ -16,8 +16,8 @@ var last_look_pos: Vector2 = Vector2.ZERO
 
 @onready var joystick_base: Control = $JoystickBase
 @onready var joystick_knob: Control = $JoystickBase/JoystickKnob
-@onready var jump_button: TouchScreenButton = $JumpButton
-@onready var record_button: TouchScreenButton = $RecordButton
+@onready var jump_button: Button = $JumpButton
+@onready var record_button: Button = $RecordButton
 
 func _ready() -> void:
 	jump_button.pressed.connect(func() -> void:
@@ -39,6 +39,8 @@ func _input(event: InputEvent) -> void:
 func _handle_touch(event: InputEventScreenTouch) -> void:
 	var screen_size := get_viewport().get_visible_rect().size
 	if event.pressed:
+		if _is_button_area(event.position):
+			return
 		if event.position.x < screen_size.x * 0.5 and move_touch_id == -1:
 			move_touch_id = event.index
 			move_center = event.position
@@ -78,6 +80,11 @@ func _reset_joystick() -> void:
 
 func _position_buttons() -> void:
 	var screen_size := get_viewport().get_visible_rect().size
-	var button_size := Vector2(140, 140)
-	jump_button.position = Vector2(screen_size.x - button_size.x - 80, screen_size.y - button_size.y - 90)
-	record_button.position = Vector2(screen_size.x - button_size.x - 80, screen_size.y - button_size.y - 250)
+	var button_size := Vector2(150, 68)
+	jump_button.size = button_size
+	record_button.size = button_size
+	jump_button.position = Vector2(screen_size.x - button_size.x - 28, screen_size.y - button_size.y - 50)
+	record_button.position = Vector2(screen_size.x - button_size.x - 28, screen_size.y - (button_size.y * 2.0) - 72)
+
+func _is_button_area(pos: Vector2) -> bool:
+	return jump_button.get_global_rect().has_point(pos) or record_button.get_global_rect().has_point(pos)
