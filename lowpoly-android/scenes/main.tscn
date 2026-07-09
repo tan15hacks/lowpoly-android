@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://mainprototype001"]
+[gd_scene load_steps=19 format=3 uid="uid://mainprototype001"]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/mobile_controls.tscn" id="2_mobile_controls"]
@@ -7,12 +7,14 @@
 [ext_resource type="PackedScene" path="res://scenes/portal.tscn" id="5_portal"]
 [ext_resource type="Script" path="res://scripts/echo_recorder.gd" id="6_echo_recorder"]
 [ext_resource type="PackedScene" path="res://scenes/echo_ghost.tscn" id="7_echo_ghost"]
+[ext_resource type="PackedScene" path="res://scenes/pressure_plate.tscn" id="8_pressure_plate"]
+[ext_resource type="Script" path="res://scripts/door.gd" id="9_door_script"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
-size = Vector2(38, 38)
+size = Vector2(44, 44)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
-size = Vector3(38, 1, 38)
+size = Vector3(44, 1, 44)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
 albedo_color = Color(0.25, 0.62, 0.29, 1)
@@ -30,11 +32,24 @@ roughness = 1.0
 albedo_color = Color(0.35, 0.21, 0.11, 1)
 roughness = 1.0
 
+[sub_resource type="BoxMesh" id="BoxMesh_door"]
+size = Vector3(3.5, 3.5, 0.7)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
+size = Vector3(3.5, 3.5, 0.7)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
+albedo_color = Color(0.12, 0.18, 0.26, 1)
+emission_enabled = true
+emission = Color(0.02, 0.05, 0.1, 1)
+emission_energy_multiplier = 0.5
+roughness = 0.65
+
 [node name="Main" type="Node3D"]
 script = ExtResource("3_main_script")
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
-position = Vector3(0, 2, 8)
+position = Vector3(0, 2, 12)
 
 [node name="EchoRecorder" type="Node" parent="."]
 script = ExtResource("6_echo_recorder")
@@ -57,13 +72,27 @@ surface_material_override/0 = SubResource("StandardMaterial3D_floor")
 position = Vector3(0, -0.5, 0)
 shape = SubResource("BoxShape3D_floor")
 
+[node name="PuzzleDoor" type="StaticBody3D" parent="."]
+position = Vector3(0, 1.75, 1.5)
+script = ExtResource("9_door_script")
+
+[node name="DoorMesh" type="MeshInstance3D" parent="PuzzleDoor"]
+mesh = SubResource("BoxMesh_door")
+surface_material_override/0 = SubResource("StandardMaterial3D_door")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PuzzleDoor"]
+shape = SubResource("BoxShape3D_door")
+
+[node name="PressurePlate" parent="." instance=ExtResource("8_pressure_plate")]
+position = Vector3(-5, 0.12, 8)
+
 [node name="LowPolyBlock" type="CSGBox3D" parent="."]
-position = Vector3(3, 0.75, 0)
+position = Vector3(3, 0.75, 5)
 size = Vector3(2, 1.5, 2)
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="LowPolyRamp" type="CSGBox3D" parent="."]
-position = Vector3(-3, 0.5, -2)
+position = Vector3(-3, 0.5, 4)
 rotation = Vector3(0, 0, 0.35)
 size = Vector3(3, 1, 2)
 material = SubResource("StandardMaterial3D_floor")
@@ -103,10 +132,10 @@ size = Vector3(2.2, 2, 2.2)
 material = SubResource("StandardMaterial3D_tree")
 
 [node name="Gem1" parent="." groups=["gems"] instance=ExtResource("4_gem")]
-position = Vector3(0, 1, 0)
+position = Vector3(2, 1, -2)
 
 [node name="Gem2" parent="." groups=["gems"] instance=ExtResource("4_gem")]
-position = Vector3(5, 1, -4)
+position = Vector3(5, 1, -7)
 
 [node name="Gem3" parent="." groups=["gems"] instance=ExtResource("4_gem")]
 position = Vector3(-6, 1, -5)
@@ -118,29 +147,29 @@ position = Vector3(8, 1, 7)
 position = Vector3(-9, 1, 6)
 
 [node name="Portal" parent="." instance=ExtResource("5_portal")]
-position = Vector3(0, 0.2, -12)
+position = Vector3(0, 0.2, -15)
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
 [node name="ObjectiveLabel" type="Label" parent="HUD"]
 offset_left = 24.0
 offset_top = 24.0
-offset_right = 760.0
+offset_right = 900.0
 offset_bottom = 80.0
-text = "Collect gems: 0 / 5"
+text = "Use echo + plate to pass the door. Gems: 0 / 5"
 
 [node name="TimerLabel" type="Label" parent="HUD"]
 offset_left = 24.0
 offset_top = 64.0
 offset_right = 220.0
 offset_bottom = 112.0
-text = "Time: 90"
+text = "Time: 120"
 
 [node name="EchoLabel" type="Label" parent="HUD"]
 offset_left = 24.0
 offset_top = 104.0
-offset_right = 760.0
+offset_right = 900.0
 offset_bottom = 152.0
-text = "Tap REC to create a 5-second echo."
+text = "Record an echo standing on the orange plate."
 
 [node name="MobileControls" parent="." instance=ExtResource("2_mobile_controls")]
