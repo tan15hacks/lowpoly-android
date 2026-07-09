@@ -10,6 +10,7 @@ extends CharacterBody3D
 @export var character_model_path: String = "res://assets/characters/skater/characterMedium.fbx"
 @export var character_skin_path: String = "res://assets/characters/skater/skaterMaleA.png"
 @export var model_scale: float = 0.95
+@export var show_local_body_in_first_person: bool = false
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var pitch: float = 0.0
@@ -86,6 +87,9 @@ func _setup_character_visual() -> void:
 	if placeholder:
 		placeholder.visible = false
 
+	if not show_local_body_in_first_person:
+		return
+
 	if not ResourceLoader.exists(character_model_path):
 		if placeholder:
 			placeholder.visible = true
@@ -102,7 +106,7 @@ func _setup_character_visual() -> void:
 	visual_root = packed_scene.instantiate()
 	visual_root.name = "SkaterCharacter"
 	visual_root.scale = Vector3.ONE * model_scale
-	visual_root.position = Vector3(0, -0.02, 0)
+	visual_root.position = Vector3(0, -1.15, -0.18)
 	visual_root.rotation.y = PI
 	add_child(visual_root)
 	_apply_skater_skin(visual_root)
