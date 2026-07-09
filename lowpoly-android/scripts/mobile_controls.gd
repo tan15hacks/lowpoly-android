@@ -13,19 +13,17 @@ var look_touch_id: int = -1
 var move_center: Vector2 = Vector2.ZERO
 var move_vector: Vector2 = Vector2.ZERO
 var last_look_pos: Vector2 = Vector2.ZERO
+var jump_rect: Rect2 = Rect2()
+var record_rect: Rect2 = Rect2()
 
 @onready var joystick_base: Control = $JoystickBase
 @onready var joystick_knob: Control = $JoystickBase/JoystickKnob
-@onready var jump_button: Button = $JumpButton
-@onready var record_button: Button = $RecordButton
+@onready var jump_panel: ColorRect = $JumpPanel
+@onready var record_panel: ColorRect = $RecordPanel
+@onready var jump_label: Label = $JumpPanel/Label
+@onready var record_label: Label = $RecordPanel/Label
 
 func _ready() -> void:
-	jump_button.pressed.connect(func() -> void:
-		jump_pressed.emit()
-	)
-	record_button.pressed.connect(func() -> void:
-		record_pressed.emit()
-	)
 	get_viewport().size_changed.connect(_position_buttons)
 	_position_buttons()
 	_reset_joystick()
@@ -39,7 +37,11 @@ func _input(event: InputEvent) -> void:
 func _handle_touch(event: InputEventScreenTouch) -> void:
 	var screen_size := get_viewport().get_visible_rect().size
 	if event.pressed:
-		if _is_button_area(event.position):
+		if jump_rect.has_point(event.position):
+			jump_pressed.emit()
+			return
+		if record_rect.has_point(event.position):
+			record_pressed.emit()
 			return
 		if event.position.x < screen_size.x * 0.5 and move_touch_id == -1:
 			move_touch_id = event.index
@@ -80,11 +82,18 @@ func _reset_joystick() -> void:
 
 func _position_buttons() -> void:
 	var screen_size := get_viewport().get_visible_rect().size
-	var button_size := Vector2(150, 68)
-	jump_button.size = button_size
-	record_button.size = button_size
-	jump_button.position = Vector2(screen_size.x - button_size.x - 28, screen_size.y - button_size.y - 50)
-	record_button.position = Vector2(screen_size.x - button_size.x - 28, screen_size.y - (button_size.y * 2.0) - 72)
+	var button_size := Vector2(170, 84)
+	jump_rect = Rect2(Vector2(screen_size.x - button_size.x - 32, screen_size.y - button_size.y - 55), button_size)
+	record_rect = Rect2(Vector2(screen_size.x - button_size.x - 32, screen_size.y - (button_size.y * 2.0) - 85), button_size)
+	_apply_panel_rect(jump_panel, jump_label, jump_rect, "JUMP")
+	_apply_panel_rect(record_panel, record_label, record_rect, "REC")
 
-func _is_button_area(pos: Vector2) -> bool:
-	return jump_button.get_global_rect().has_point(pos) or record_button.get_global_rect().has_point(pos)
+func _apply_panel_rect(panel: ColorRect, label: Label, rect: Rect2, text: String) -> void:
+	panel.position = rect.position
+	panel.size = rect.size
+	panel.color = Color(0.05, 0.05, 0.05, 0.72)
+	label.position = Vector2.ZERO
+	label.size = rect.size
+	label.text = text
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
