@@ -5,6 +5,7 @@ signal replay_finished
 @export var character_model_path: String = "res://assets/characters/skater/characterMedium.fbx"
 @export var character_skin_path: String = "res://assets/characters/skater/skaterMaleA.png"
 @export var model_scale: float = 0.95
+@export var foot_offset_y: float = 0.0
 
 var frames: Array = []
 var frame_index: int = 0
@@ -83,7 +84,7 @@ func _setup_echo_visual() -> void:
 
 	visual_root.name = "EchoSkaterCharacter"
 	visual_root.scale = Vector3.ONE * model_scale
-	visual_root.position = Vector3(0, -1.15, -0.18)
+	visual_root.position = Vector3(0, foot_offset_y, 0)
 	visual_root.rotation.y = PI
 	visual_start_y = visual_root.position.y
 	add_child(visual_root)
@@ -101,7 +102,7 @@ func _update_procedural_visual(delta: float) -> void:
 	var lean_amount: float = 0.0
 	if horizontal_speed > 0.25:
 		bob_amount = sin(bob_time) * 0.045
-		lean_amount = -0.12
+		lean_amount = -0.08
 
 	visual_root.position.y = visual_start_y + bob_amount
 	visual_root.rotation.x = lerp(visual_root.rotation.x, lean_amount, min(delta * 10.0, 1.0))
