@@ -75,13 +75,13 @@ func _setup_echo_visual() -> void:
 		print("Echo skater model missing: ", character_model_path)
 		return
 
-	var packed_scene := load(character_model_path)
+	var packed_scene: PackedScene = load(character_model_path)
 	if packed_scene == null:
 		if body:
 			body.visible = true
 		return
 
-	visual_root = packed_scene.instantiate()
+	visual_root = packed_scene.instantiate() as Node3D
 	visual_root.name = "EchoSkaterCharacter"
 	visual_root.scale = Vector3.ONE * model_scale
 	visual_root.position = Vector3(0, -1.15, -0.18)
@@ -112,19 +112,19 @@ func _add_external_animation_to_library(target_library: AnimationLibrary, clip_n
 	if not ResourceLoader.exists(path):
 		print("Animation file missing: ", path)
 		return
-	var scene := load(path)
+	var scene: PackedScene = load(path)
 	if scene == null:
 		return
-	var instance := scene.instantiate()
-	var source_player := _find_animation_player(instance)
+	var instance: Node = scene.instantiate()
+	var source_player: AnimationPlayer = _find_animation_player(instance)
 	if source_player == null:
 		instance.queue_free()
 		return
 	var copied := false
-	for library_name in source_player.get_animation_library_list():
-		var source_library := source_player.get_animation_library(library_name)
-		for animation_name in source_library.get_animation_list():
-			var animation := source_library.get_animation(animation_name).duplicate(true)
+	for library_name: String in source_player.get_animation_library_list():
+		var source_library: AnimationLibrary = source_player.get_animation_library(library_name)
+		for animation_name: String in source_library.get_animation_list():
+			var animation: Animation = source_library.get_animation(animation_name).duplicate(true)
 			animation.loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
 			target_library.add_animation(clip_name, animation)
 			copied = true
@@ -135,17 +135,17 @@ func _add_external_animation_to_library(target_library: AnimationLibrary, clip_n
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:
-		return node
-	for child in node.get_children():
-		var found := _find_animation_player(child)
+		return node as AnimationPlayer
+	for child: Node in node.get_children():
+		var found: AnimationPlayer = _find_animation_player(child)
 		if found:
 			return found
 	return null
 
 func _update_echo_animation(delta: float) -> void:
-	var movement := global_position - last_position
-	var horizontal_speed := Vector2(movement.x, movement.z).length() / max(delta, 0.001)
-	var vertical_speed := abs(movement.y) / max(delta, 0.001)
+	var movement: Vector3 = global_position - last_position
+	var horizontal_speed: float = Vector2(movement.x, movement.z).length() / max(delta, 0.001)
+	var vertical_speed: float = abs(movement.y) / max(delta, 0.001)
 	if vertical_speed > 0.8:
 		_play_anim("jump")
 	elif horizontal_speed > 0.25:
@@ -164,7 +164,7 @@ func _play_anim(name: String) -> void:
 func _apply_echo_skin(root: Node) -> void:
 	var material := StandardMaterial3D.new()
 	if ResourceLoader.exists(character_skin_path):
-		var texture := load(character_skin_path)
+		var texture: Texture2D = load(character_skin_path)
 		if texture:
 			material.albedo_texture = texture
 	material.albedo_color = Color(0.2, 0.9, 1.0, echo_alpha)
@@ -178,6 +178,6 @@ func _apply_echo_skin(root: Node) -> void:
 
 func _apply_material_to_meshes(node: Node, material: Material) -> void:
 	if node is MeshInstance3D:
-		node.set_surface_override_material(0, material)
-	for child in node.get_children():
+		(node as MeshInstance3D).set_surface_override_material(0, material)
+	for child: Node in node.get_children():
 		_apply_material_to_meshes(child, material)
