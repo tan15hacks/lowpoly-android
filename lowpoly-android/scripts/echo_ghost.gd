@@ -8,7 +8,6 @@ signal replay_finished
 @export var run_animation_path: String = "res://assets/characters/skater/run.fbx"
 @export var jump_animation_path: String = "res://assets/characters/skater/jump.fbx"
 @export var model_scale: float = 0.95
-@export var echo_alpha: float = 0.55
 
 var frames: Array = []
 var frame_index: int = 0
@@ -171,17 +170,18 @@ func _apply_echo_skin(root: Node) -> void:
 		var texture: Texture2D = load(character_skin_path)
 		if texture:
 			material.albedo_texture = texture
-	material.albedo_color = Color(0.2, 0.9, 1.0, echo_alpha)
+	material.albedo_color = Color(0.45, 0.95, 1.0, 1.0)
 	material.emission_enabled = true
-	material.emission = Color(0.05, 0.55, 1.0, 1.0)
-	material.emission_energy_multiplier = 0.65
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.emission = Color(0.05, 0.45, 0.9, 1.0)
+	material.emission_energy_multiplier = 0.35
+	material.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	material.roughness = 0.8
 	_apply_material_to_meshes(root, material)
 
 func _apply_material_to_meshes(node: Node, material: Material) -> void:
 	if node is MeshInstance3D:
+		(node as MeshInstance3D).visible = true
 		(node as MeshInstance3D).set_surface_override_material(0, material)
 	for child in node.get_children():
 		_apply_material_to_meshes(child, material)
