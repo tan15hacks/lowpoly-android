@@ -6,8 +6,8 @@ signal jump_pressed
 signal record_pressed
 signal reset_pressed
 
-@export var joystick_radius: float = 95.0
-@export var look_sensitivity: float = 0.009
+@export var joystick_radius: float = 105.0
+@export var look_sensitivity: float = 0.0075
 
 var move_touch_id: int = -1
 var look_touch_id: int = -1
@@ -52,13 +52,13 @@ func _handle_touch(event: InputEventScreenTouch) -> void:
 		if reset_rect.has_point(event.position):
 			reset_pressed.emit()
 			return
-		if event.position.x < screen_size.x * 0.5 and move_touch_id == -1:
+		if event.position.x < screen_size.x * 0.52 and move_touch_id == -1:
 			move_touch_id = event.index
 			move_center = event.position
 			joystick_base.position = move_center - joystick_base.size * 0.5
 			joystick_base.visible = true
 			_update_joystick(event.position)
-		elif event.position.x >= screen_size.x * 0.5 and look_touch_id == -1:
+		elif event.position.x >= screen_size.x * 0.45 and look_touch_id == -1:
 			look_touch_id = event.index
 			last_look_pos = event.position
 	else:
@@ -91,10 +91,11 @@ func _reset_joystick() -> void:
 
 func _position_buttons() -> void:
 	var screen_size := get_viewport().get_visible_rect().size
-	var button_size := Vector2(170, 84)
-	jump_rect = Rect2(Vector2(screen_size.x - button_size.x - 32, screen_size.y - button_size.y - 55), button_size)
-	record_rect = Rect2(Vector2(screen_size.x - button_size.x - 32, screen_size.y - (button_size.y * 2.0) - 85), button_size)
-	reset_rect = Rect2(Vector2(screen_size.x - button_size.x - 32, screen_size.y - (button_size.y * 3.0) - 115), button_size)
+	var button_size := Vector2(178, 82)
+	var pad := 30.0
+	jump_rect = Rect2(Vector2(screen_size.x - button_size.x - pad, screen_size.y - button_size.y - 50), button_size)
+	record_rect = Rect2(Vector2(screen_size.x - button_size.x - pad, screen_size.y - (button_size.y * 2.0) - 82), button_size)
+	reset_rect = Rect2(Vector2(screen_size.x - button_size.x - pad, screen_size.y - (button_size.y * 3.0) - 114), button_size)
 	_apply_panel_rect(jump_panel, jump_label, jump_rect, "JUMP")
 	_apply_panel_rect(record_panel, record_label, record_rect, "REC")
 	_apply_panel_rect(reset_panel, reset_label, reset_rect, "RESET")
@@ -102,7 +103,7 @@ func _position_buttons() -> void:
 func _apply_panel_rect(panel: ColorRect, label: Label, rect: Rect2, text: String) -> void:
 	panel.position = rect.position
 	panel.size = rect.size
-	panel.color = Color(0.05, 0.05, 0.05, 0.72)
+	panel.color = Color(0.03, 0.04, 0.05, 0.78)
 	label.position = Vector2.ZERO
 	label.size = rect.size
 	label.text = text
