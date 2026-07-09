@@ -83,30 +83,38 @@ func get_echo_rotation() -> Vector3:
 	return Vector3(0.0, global_rotation.y, 0.0)
 
 func _setup_character_visual() -> void:
-	var placeholder := get_node_or_null("Body")
-	if placeholder:
-		placeholder.visible = false
+	var collision_preview := get_node_or_null("Body")
+	if collision_preview:
+		collision_preview.visible = false
+
+	var scene_preview := get_node_or_null("SkaterPreview") as Node3D
+	if scene_preview != null:
+		visual_root = scene_preview
+		visual_root.scale = Vector3.ONE * model_scale
+		visual_root.position = Vector3.ZERO
+		visual_root.rotation.y = PI
+		_apply_skater_skin(visual_root)
+		visual_root.visible = show_local_body_in_first_person
+		return
 
 	if not show_local_body_in_first_person:
 		return
 
 	if not ResourceLoader.exists(character_model_path):
-		if placeholder:
-			placeholder.visible = true
 		print("Skater character model missing: ", character_model_path)
 		return
 
-	var packed_scene := load(character_model_path)
+	var packed_scene: PackedScene = load(character_model_path)
 	if packed_scene == null:
-		if placeholder:
-			placeholder.visible = true
 		print("Failed to load character model: ", character_model_path)
 		return
 
-	visual_root = packed_scene.instantiate()
+	visual_root = packed_scene.instantiate() as Node3D
+	if visual_root == null:
+		return
 	visual_root.name = "SkaterCharacter"
 	visual_root.scale = Vector3.ONE * model_scale
-	visual_root.position = Vector3(0, -1.15, -0.18)
+	visual_root.position = Vector3.ZERO
 	visual_root.rotation.y = PI
 	add_child(visual_root)
 	_apply_skater_skin(visual_root)
@@ -116,7 +124,7 @@ func _apply_skater_skin(root: Node) -> void:
 		print("Skater skin missing: ", character_skin_path)
 		return
 
-	var texture := load(character_skin_path)
+	var texture: Texture2D = load(character_skin_path)
 	if texture == null:
 		return
 
@@ -128,7 +136,7 @@ func _apply_skater_skin(root: Node) -> void:
 
 func _apply_material_to_meshes(node: Node, material: Material) -> void:
 	if node is MeshInstance3D:
-		node.set_surface_override_material(0, material)
+		(node as MeshInstance3D).set_surface_override_material(0, material)
 	for child in node.get_children():
 		_apply_material_to_meshes(child, material)
 
