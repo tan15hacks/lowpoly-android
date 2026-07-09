@@ -1,9 +1,10 @@
-[gd_scene load_steps=13 format=3 uid="uid://mainprototype001"]
+[gd_scene load_steps=14 format=3 uid="uid://mainprototype001"]
 
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/mobile_controls.tscn" id="2_mobile_controls"]
 [ext_resource type="Script" path="res://scripts/main.gd" id="3_main_script"]
 [ext_resource type="PackedScene" path="res://scenes/gem.tscn" id="4_gem"]
+[ext_resource type="PackedScene" path="res://scenes/portal.tscn" id="5_portal"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
 size = Vector2(38, 38)
@@ -26,8 +27,6 @@ roughness = 1.0
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trunk"]
 albedo_color = Color(0.35, 0.21, 0.11, 1)
 roughness = 1.0
-
-[sub_resource type="BoxMesh" id="BoxMesh_hud"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("3_main_script")
@@ -112,13 +111,23 @@ position = Vector3(8, 1, 7)
 [node name="Gem5" parent="." groups=["gems"] instance=ExtResource("4_gem")]
 position = Vector3(-9, 1, 6)
 
+[node name="Portal" parent="." instance=ExtResource("5_portal")]
+position = Vector3(0, 0.2, -12)
+
 [node name="HUD" type="CanvasLayer" parent="."]
 
 [node name="ObjectiveLabel" type="Label" parent="HUD"]
 offset_left = 24.0
 offset_top = 24.0
-offset_right = 520.0
+offset_right = 680.0
 offset_bottom = 80.0
 text = "Collect gems: 0 / 5"
+
+[node name="TimerLabel" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 64.0
+offset_right = 220.0
+offset_bottom = 112.0
+text = "Time: 90"
 
 [node name="MobileControls" parent="." instance=ExtResource("2_mobile_controls")]
