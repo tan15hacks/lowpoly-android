@@ -4,6 +4,7 @@ signal recording_started
 signal recording_finished(frames: Array)
 signal replay_started
 signal recording_blocked
+signal recording_progress(seconds_left: float)
 
 @export var max_record_time: float = 5.0
 @export var echo_scene: PackedScene
@@ -28,6 +29,7 @@ func start_recording() -> void:
 	record_time = 0.0
 	frames.clear()
 	recording_started.emit()
+	recording_progress.emit(max_record_time)
 
 func _physics_process(delta: float) -> void:
 	if not is_recording or target == null:
@@ -39,6 +41,7 @@ func _physics_process(delta: float) -> void:
 		"position": target.global_position,
 		"rotation": target.global_rotation
 	})
+	recording_progress.emit(max(max_record_time - record_time, 0.0))
 
 	if record_time >= max_record_time:
 		finish_recording()
