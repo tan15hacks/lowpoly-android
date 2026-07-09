@@ -1,7 +1,7 @@
 extends Node3D
 
-@export var level_time: float = 150.0
-@export var spawn_position: Vector3 = Vector3(0, 2, 12)
+@export var level_time: float = 180.0
+@export var spawn_position: Vector3 = Vector3(0, 2, 20)
 
 var gems_collected: int = 0
 var total_gems: int = 0
@@ -26,9 +26,11 @@ var clear_time: float = 0.0
 func _ready() -> void:
 	time_left = level_time
 	start_time = Time.get_ticks_msec() / 1000.0
+	_scale_authored_level_nodes()
 	_add_runtime_tree_collisions()
 	_add_runtime_level_boundaries()
 	_add_runtime_challenge_blocks()
+	_add_runtime_world_dressing()
 	_style_hud()
 
 	if portal.has_method("set_active"):
@@ -170,11 +172,11 @@ func _respawn_player() -> void:
 	_update_hud()
 
 func _get_clear_rank(seconds: float) -> String:
-	if seconds <= 35.0:
+	if seconds <= 45.0:
 		return "S"
-	if seconds <= 55.0:
+	if seconds <= 70.0:
 		return "A"
-	if seconds <= 80.0:
+	if seconds <= 100.0:
 		return "B"
 	return "C"
 
@@ -183,22 +185,77 @@ func _style_hud() -> void:
 	timer_label.add_theme_font_size_override("font_size", 22)
 	echo_label.add_theme_font_size_override("font_size", 18)
 
+func _scale_authored_level_nodes() -> void:
+	# Scale the level around the new head-height camera so the world reads correctly with the skater model.
+	_reposition_node("Player", Vector3(0, 2, 20))
+	_reposition_node("PressurePlate", Vector3(-9, 0.12, 14))
+	_reposition_node("PuzzleDoor", Vector3(0, 2.2, 4.5))
+	_reposition_node("Portal", Vector3(0, 0.2, -28))
+
+	_set_node_scale("PuzzleDoor", Vector3(1.6, 1.25, 1.25))
+	_set_node_scale("PressurePlate", Vector3(1.4, 1.0, 1.4))
+	_set_node_scale("Portal", Vector3(1.5, 1.5, 1.5))
+
+	_reposition_node("Gem1", Vector3(3, 1.2, -2))
+	_reposition_node("Gem2", Vector3(9, 1.2, -12))
+	_reposition_node("Gem3", Vector3(-10, 1.2, -10))
+	_reposition_node("Gem4", Vector3(14, 1.2, 13))
+	_reposition_node("Gem5", Vector3(-15, 1.2, 12))
+	for gem_name in ["Gem1", "Gem2", "Gem3", "Gem4", "Gem5"]:
+		_set_node_scale(gem_name, Vector3(1.25, 1.25, 1.25))
+
+	_reposition_node("LowPolyBlock", Vector3(7, 1.2, 10))
+	_reposition_node("LowPolyRamp", Vector3(-6, 0.8, 8))
+	_reposition_node("Rock1", Vector3(-15, 0.8, 3))
+	_reposition_node("Rock2", Vector3(15, 0.7, -9))
+	_reposition_node("Tree1Trunk", Vector3(-16, 1.4, -15))
+	_reposition_node("Tree1Leaves", Vector3(-16, 3.2, -15))
+	_reposition_node("Tree2Trunk", Vector3(16, 1.4, 15))
+	_reposition_node("Tree2Leaves", Vector3(16, 3.2, 15))
+
+	_set_node_scale("LowPolyBlock", Vector3(1.8, 1.5, 1.8))
+	_set_node_scale("LowPolyRamp", Vector3(1.8, 1.2, 1.8))
+	_set_node_scale("Rock1", Vector3(1.8, 1.4, 1.8))
+	_set_node_scale("Rock2", Vector3(1.8, 1.4, 1.8))
+	_set_node_scale("Tree1Trunk", Vector3(1.5, 1.3, 1.5))
+	_set_node_scale("Tree1Leaves", Vector3(1.7, 1.45, 1.7))
+	_set_node_scale("Tree2Trunk", Vector3(1.5, 1.3, 1.5))
+	_set_node_scale("Tree2Leaves", Vector3(1.7, 1.45, 1.7))
+
+func _reposition_node(node_name: String, pos: Vector3) -> void:
+	var node := get_node_or_null(node_name) as Node3D
+	if node != null:
+		node.position = pos
+
+func _set_node_scale(node_name: String, node_scale: Vector3) -> void:
+	var node := get_node_or_null(node_name) as Node3D
+	if node != null:
+		node.scale = node_scale
+
 func _add_runtime_tree_collisions() -> void:
-	_add_static_box_collision("Tree1TrunkCollision", Vector3(-7, 1.0, -7), Vector3(0.65, 2.0, 0.65))
-	_add_static_box_collision("Tree1LeavesCollision", Vector3(-7, 2.5, -7), Vector3(2.1, 2.0, 2.1))
-	_add_static_box_collision("Tree2TrunkCollision", Vector3(7, 1.0, 6), Vector3(0.65, 2.0, 0.65))
-	_add_static_box_collision("Tree2LeavesCollision", Vector3(7, 2.5, 6), Vector3(2.1, 2.0, 2.1))
+	_add_static_box_collision("Tree1TrunkCollision", Vector3(-16, 1.4, -15), Vector3(1.0, 2.8, 1.0))
+	_add_static_box_collision("Tree1LeavesCollision", Vector3(-16, 3.2, -15), Vector3(3.8, 2.9, 3.8))
+	_add_static_box_collision("Tree2TrunkCollision", Vector3(16, 1.4, 15), Vector3(1.0, 2.8, 1.0))
+	_add_static_box_collision("Tree2LeavesCollision", Vector3(16, 3.2, 15), Vector3(3.8, 2.9, 3.8))
 
 func _add_runtime_level_boundaries() -> void:
-	_add_static_box_collision("NorthBoundary", Vector3(0, 1.5, -22), Vector3(44, 3, 1))
-	_add_static_box_collision("SouthBoundary", Vector3(0, 1.5, 22), Vector3(44, 3, 1))
-	_add_static_box_collision("EastBoundary", Vector3(22, 1.5, 0), Vector3(1, 3, 44))
-	_add_static_box_collision("WestBoundary", Vector3(-22, 1.5, 0), Vector3(1, 3, 44))
+	_add_static_box_collision("NorthBoundary", Vector3(0, 2.0, -38), Vector3(76, 4, 1))
+	_add_static_box_collision("SouthBoundary", Vector3(0, 2.0, 38), Vector3(76, 4, 1))
+	_add_static_box_collision("EastBoundary", Vector3(38, 2.0, 0), Vector3(1, 4, 76))
+	_add_static_box_collision("WestBoundary", Vector3(-38, 2.0, 0), Vector3(1, 4, 76))
 
 func _add_runtime_challenge_blocks() -> void:
-	_add_visible_static_box("ShortcutBlockA", Vector3(4.5, 0.45, 0.5), Vector3(2.5, 0.9, 1.2), Color(0.18, 0.35, 0.24, 1))
-	_add_visible_static_box("ShortcutBlockB", Vector3(-4.5, 0.45, -1.2), Vector3(2.5, 0.9, 1.2), Color(0.18, 0.35, 0.24, 1))
-	_add_visible_static_box("PortalStep", Vector3(0, 0.3, -12.5), Vector3(3.2, 0.6, 2.0), Color(0.24, 0.20, 0.34, 1))
+	_add_visible_static_box("ShortcutBlockA", Vector3(8, 0.65, 1), Vector3(4.5, 1.3, 2.2), Color(0.18, 0.35, 0.24, 1))
+	_add_visible_static_box("ShortcutBlockB", Vector3(-8, 0.65, -2.5), Vector3(4.5, 1.3, 2.2), Color(0.18, 0.35, 0.24, 1))
+	_add_visible_static_box("PortalStep", Vector3(0, 0.45, -24.5), Vector3(5.5, 0.9, 3.0), Color(0.24, 0.20, 0.34, 1))
+	_add_visible_static_box("DoorFrameLeft", Vector3(-4.0, 2.3, 4.5), Vector3(0.75, 4.6, 1.2), Color(0.15, 0.18, 0.25, 1))
+	_add_visible_static_box("DoorFrameRight", Vector3(4.0, 2.3, 4.5), Vector3(0.75, 4.6, 1.2), Color(0.15, 0.18, 0.25, 1))
+
+func _add_runtime_world_dressing() -> void:
+	_add_visible_static_box("FarRockA", Vector3(-24, 0.7, 20), Vector3(4.5, 1.4, 3.2), Color(0.28, 0.30, 0.30, 1))
+	_add_visible_static_box("FarRockB", Vector3(24, 0.7, 21), Vector3(4.0, 1.4, 3.6), Color(0.28, 0.30, 0.30, 1))
+	_add_visible_static_box("GuidePostA", Vector3(-9, 1.0, 10), Vector3(0.35, 2.0, 0.35), Color(0.28, 0.18, 0.10, 1))
+	_add_visible_static_box("GuidePostB", Vector3(-9, 2.1, 10), Vector3(2.4, 0.35, 0.35), Color(0.25, 0.12, 0.04, 1))
 
 func _add_static_box_collision(node_name: String, pos: Vector3, size: Vector3) -> StaticBody3D:
 	var body := StaticBody3D.new()
