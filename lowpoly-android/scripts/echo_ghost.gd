@@ -4,6 +4,9 @@ signal replay_finished
 
 @export var character_model_path: String = "res://assets/characters/skater/characterMedium.fbx"
 @export var character_skin_path: String = "res://assets/characters/skater/skaterMaleA.png"
+@export var idle_animation_path: String = "res://assets/characters/skater/idle.fbx"
+@export var run_animation_path: String = "res://assets/characters/skater/run.fbx"
+@export var jump_animation_path: String = "res://assets/characters/skater/jump.fbx"
 @export var model_scale: float = 0.95
 @export var foot_offset_y: float = 0.0
 
@@ -19,6 +22,10 @@ var bob_time: float = 0.0
 @onready var body: MeshInstance3D = $Body
 
 func _ready() -> void:
+	_probe_animation_asset("MODEL", character_model_path)
+	_probe_animation_asset("IDLE", idle_animation_path)
+	_probe_animation_asset("RUN", run_animation_path)
+	_probe_animation_asset("JUMP", jump_animation_path)
 	_setup_echo_visual()
 
 func start_replay(recorded_frames: Array) -> void:
@@ -106,6 +113,36 @@ func _update_procedural_visual(delta: float) -> void:
 
 	visual_root.position.y = visual_start_y + bob_amount
 	visual_root.rotation.x = lerp(visual_root.rotation.x, lean_amount, min(delta * 10.0, 1.0))
+
+func _probe_animation_asset(label: String, path: String) -> void:
+	print("=== SKATER PROBE ", label, " ===")
+	print("path: ", path)
+	if not ResourceLoader.exists(path):
+		print("resource missing")
+		return
+	var packed_scene: PackedScene = load(path)
+	if packed_scene == null:
+		print("failed to load PackedScene")
+		return
+	var instance: Node = packed_scene.instantiate()
+	if instance == null:
+		print("failed to instantiate")
+		return
+	_probe_node_tree(instance, "")
+	instance.queue_free()
+
+func _probe_node_tree(node: Node, indent: String) -> void:
+	print(indent, node.name, " [", node.get_class(), "]")
+	if node is AnimationPlayer:
+		var player := node as AnimationPlayer
+		for animation_name: StringName in player.get_animation_list():
+			var animation: Animation = player.get_animation(animation_name)
+			print(indent, "  animation=", animation_name, " length=", animation.length, " tracks=", animation.get_track_count())
+	if node is Skeleton3D:
+		var skeleton := node as Skeleton3D
+		print(indent, "  bones=", skeleton.get_bone_count())
+	for child: Node in node.get_children():
+		_probe_node_tree(child, indent + "  ")
 
 func _apply_echo_skin(root: Node) -> void:
 	var material := StandardMaterial3D.new()
