@@ -1,12 +1,11 @@
 extends CharacterBody3D
 
+const ProceduralAnimatorScript = preload("res://scripts/procedural_humanoid_animator.gd")
+
 signal replay_finished
 
 @export var character_model_path: String = "res://assets/characters/skater/characterMedium.fbx"
 @export var character_skin_path: String = "res://assets/characters/skater/skaterMaleA.png"
-@export var idle_animation_path: String = "res://assets/characters/skater/idle.fbx"
-@export var run_animation_path: String = "res://assets/characters/skater/run.fbx"
-@export var jump_animation_path: String = "res://assets/characters/skater/jump.fbx"
 @export var model_scale: float = 0.95
 @export var foot_offset_y: float = 0.0
 
@@ -14,19 +13,14 @@ var frames: Array = []
 var frame_index: int = 0
 var replay_speed: float = 1.0
 var elapsed: float = 0.0
-var last_position: Vector3 = Vector3.ZERO
 var visual_root: Node3D
-var visual_start_y: float = 0.0
-var bob_time: float = 0.0
+var procedural_animator: ProceduralHumanoidAnimator
 
 @onready var body: MeshInstance3D = $Body
 
 func _ready() -> void:
-	_probe_animation_asset("MODEL", character_model_path)
-	_probe_animation_asset("IDLE", idle_animation_path)
-	_probe_animation_asset("RUN", run_animation_path)
-	_probe_animation_asset("JUMP", jump_animation_path)
 	_setup_echo_visual()
+	_setup_procedural_animator()
 
 func start_replay(recorded_frames: Array) -> void:
 	frames = recorded_frames.duplicate(true)
@@ -37,19 +31,20 @@ func start_replay(recorded_frames: Array) -> void:
 		queue_free()
 		return
 	_apply_frame(frames[0])
-	last_position = global_position
 
 func _physics_process(delta: float) -> void:
 	if frames.is_empty():
 		return
 
-	last_position = global_position
+	var previous_position: Vector3 = global_position
 	elapsed += delta * replay_speed
 	while frame_index < frames.size() - 1 and frames[frame_index + 1]["time"] <= elapsed:
 		frame_index += 1
 
 	if frame_index >= frames.size() - 1:
 		_apply_frame(frames.back())
+		if procedural_animator != null:
+			procedural_animator.update_animation(delta, 0.0, 0.0, true)
 		replay_finished.emit()
 		queue_free()
 		return
@@ -61,7 +56,13 @@ func _physics_process(delta: float) -> void:
 
 	global_position = current["position"].lerp(next["position"], t)
 	global_rotation = current["rotation"].lerp(next["rotation"], t)
-	_update_procedural_visual(delta)
+
+	if procedural_animator != null:
+		var movement: Vector3 = global_position - previous_position
+		var horizontal_speed: float = Vector2(movement.x, movement.z).length() / max(delta, 0.001)
+		var vertical_velocity: float = movement.y / max(delta, 0.001)
+		var appears_grounded: bool = abs(vertical_velocity) < 0.30
+		procedural_animator.update_animation(delta, horizontal_speed, vertical_velocity, appears_grounded)
 
 func _apply_frame(frame: Dictionary) -> void:
 	global_position = frame["position"]
@@ -93,56 +94,16 @@ func _setup_echo_visual() -> void:
 	visual_root.scale = Vector3.ONE * model_scale
 	visual_root.position = Vector3(0, foot_offset_y, 0)
 	visual_root.rotation.y = PI
-	visual_start_y = visual_root.position.y
 	add_child(visual_root)
 	_apply_echo_skin(visual_root)
 
-func _update_procedural_visual(delta: float) -> void:
+func _setup_procedural_animator() -> void:
 	if visual_root == null:
 		return
-
-	var movement: Vector3 = global_position - last_position
-	var horizontal_speed: float = Vector2(movement.x, movement.z).length() / max(delta, 0.001)
-	bob_time += delta * clamp(horizontal_speed * 4.0, 1.0, 12.0)
-
-	var bob_amount: float = 0.0
-	var lean_amount: float = 0.0
-	if horizontal_speed > 0.25:
-		bob_amount = sin(bob_time) * 0.045
-		lean_amount = -0.08
-
-	visual_root.position.y = visual_start_y + bob_amount
-	visual_root.rotation.x = lerp(visual_root.rotation.x, lean_amount, min(delta * 10.0, 1.0))
-
-func _probe_animation_asset(label: String, path: String) -> void:
-	print("=== SKATER PROBE ", label, " ===")
-	print("path: ", path)
-	if not ResourceLoader.exists(path):
-		print("resource missing")
-		return
-	var packed_scene: PackedScene = load(path)
-	if packed_scene == null:
-		print("failed to load PackedScene")
-		return
-	var instance: Node = packed_scene.instantiate()
-	if instance == null:
-		print("failed to instantiate")
-		return
-	_probe_node_tree(instance, "")
-	instance.queue_free()
-
-func _probe_node_tree(node: Node, indent: String) -> void:
-	print(indent, node.name, " [", node.get_class(), "]")
-	if node is AnimationPlayer:
-		var player := node as AnimationPlayer
-		for animation_name: StringName in player.get_animation_list():
-			var animation: Animation = player.get_animation(animation_name)
-			print(indent, "  animation=", animation_name, " length=", animation.length, " tracks=", animation.get_track_count())
-	if node is Skeleton3D:
-		var skeleton := node as Skeleton3D
-		print(indent, "  bones=", skeleton.get_bone_count())
-	for child: Node in node.get_children():
-		_probe_node_tree(child, indent + "  ")
+	procedural_animator = ProceduralAnimatorScript.new() as ProceduralHumanoidAnimator
+	procedural_animator.name = "ProceduralHumanoidAnimator"
+	add_child(procedural_animator)
+	procedural_animator.setup(visual_root)
 
 func _apply_echo_skin(root: Node) -> void:
 	var material := StandardMaterial3D.new()
