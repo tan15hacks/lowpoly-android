@@ -19,23 +19,17 @@ func setup(character_root: Node) -> bool:
 	if skeleton == null:
 		print("ProceduralHumanoidAnimator: no Skeleton3D found.")
 		return false
-
 	_map_bones()
 	_cache_base_pose()
 	initialized = not bone_indices.is_empty()
-
 	if initialized:
 		print("ProceduralHumanoidAnimator mapped bones: ", bone_indices)
 		_apply_animation_pose(0.0, true)
-	else:
-		print("ProceduralHumanoidAnimator: no compatible humanoid bones found.")
-
 	return initialized
 
 func update_animation(delta: float, horizontal_speed: float, vertical_velocity: float, on_floor: bool) -> void:
 	if not initialized or skeleton == null:
 		return
-
 	elapsed += delta
 	var target_movement: float = clamp(horizontal_speed / max(run_reference_speed, 0.01), 0.0, 1.0)
 	movement_blend = move_toward(movement_blend, target_movement, delta * 6.5)
@@ -64,8 +58,10 @@ func _apply_animation_pose(vertical_velocity: float, on_floor: bool) -> void:
 	var right_arm_swing: float = stride * 0.38 * run_weight
 	left_arm_swing = lerp(left_arm_swing, -0.22, jump_weight)
 	right_arm_swing = lerp(right_arm_swing, -0.22, jump_weight)
+
+	# This Kenney skeleton uses the same local Z direction for both shoulder bones.
 	_set_rotation("left_upper_arm", Vector3(left_arm_swing, 0.0, -arm_down_angle))
-	_set_rotation("right_upper_arm", Vector3(right_arm_swing, 0.0, arm_down_angle))
+	_set_rotation("right_upper_arm", Vector3(right_arm_swing, 0.0, -arm_down_angle))
 
 	var left_elbow: float = 0.12 + max(0.0, stride) * 0.20 * run_weight
 	var right_elbow: float = 0.12 + max(0.0, opposite_stride) * 0.20 * run_weight
@@ -89,7 +85,6 @@ func _apply_animation_pose(vertical_velocity: float, on_floor: bool) -> void:
 	right_knee = lerp(right_knee, jump_knee, jump_weight)
 	_set_rotation("left_shin", Vector3(left_knee, 0.0, 0.0))
 	_set_rotation("right_shin", Vector3(right_knee, 0.0, 0.0))
-
 	_set_rotation("left_foot", Vector3(-left_leg_swing * 0.15, 0.0, 0.0))
 	_set_rotation("right_foot", Vector3(-right_leg_swing * 0.15, 0.0, 0.0))
 
@@ -110,7 +105,6 @@ func _map_bones() -> void:
 	_map_role("right_shin", ["rightlowerleg", "rightleg", "lowerlegr", "calfr", "shinr"], ["upleg", "upperleg", "thigh", "foot"])
 	_map_role("left_foot", ["leftfoot", "footl", "lfoot"], ["toe"])
 	_map_role("right_foot", ["rightfoot", "footr", "rfoot"], ["toe"])
-
 	if bone_indices.has("spine") and bone_indices.has("chest") and bone_indices["spine"] == bone_indices["chest"]:
 		bone_indices.erase("chest")
 
