@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+const ProceduralAnimatorScript = preload("res://scripts/procedural_humanoid_animator.gd")
+
 @export var speed: float = 5.6
 @export var acceleration: float = 18.0
 @export var air_acceleration: float = 8.0
@@ -19,12 +21,14 @@ var mobile_jump_requested: bool = false
 var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
 var visual_root: Node3D
+var procedural_animator: ProceduralHumanoidAnimator
 
 @onready var head: Node3D = $Head
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	_setup_character_visual()
+	_setup_procedural_animator()
 
 func connect_mobile_controls(controls: CanvasLayer) -> void:
 	controls.move_changed.connect(_on_mobile_move_changed)
@@ -69,6 +73,10 @@ func _physics_process(delta: float) -> void:
 
 	_update_visual_facing(direction, delta)
 	move_and_slide()
+
+	if procedural_animator != null:
+		var horizontal_speed: float = Vector2(velocity.x, velocity.z).length()
+		procedural_animator.update_animation(delta, horizontal_speed, velocity.y, is_on_floor())
 
 func _apply_look(delta: Vector2) -> void:
 	rotate_y(-delta.x)
@@ -118,6 +126,14 @@ func _setup_character_visual() -> void:
 	visual_root.rotation.y = PI
 	add_child(visual_root)
 	_apply_skater_skin(visual_root)
+
+func _setup_procedural_animator() -> void:
+	if visual_root == null:
+		return
+	procedural_animator = ProceduralAnimatorScript.new() as ProceduralHumanoidAnimator
+	procedural_animator.name = "ProceduralHumanoidAnimator"
+	add_child(procedural_animator)
+	procedural_animator.setup(visual_root)
 
 func _apply_skater_skin(root: Node) -> void:
 	if not ResourceLoader.exists(character_skin_path):
