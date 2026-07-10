@@ -50,7 +50,6 @@ func _apply_animation_pose(vertical_velocity: float, on_floor: bool) -> void:
 	var run_weight: float = movement_blend * (1.0 - air_blend)
 	var jump_weight: float = air_blend
 
-	# Rotation-only animation. Never move the hips/root position because that sinks the mesh.
 	var hips_yaw: float = stride * 0.08 * run_weight
 	_set_rotation("hips", Vector3(0.0, hips_yaw, 0.0))
 
@@ -65,8 +64,8 @@ func _apply_animation_pose(vertical_velocity: float, on_floor: bool) -> void:
 	var right_arm_swing: float = stride * 0.38 * run_weight
 	left_arm_swing = lerp(left_arm_swing, -0.22, jump_weight)
 	right_arm_swing = lerp(right_arm_swing, -0.22, jump_weight)
-	_set_rotation("left_upper_arm", Vector3(left_arm_swing, 0.0, arm_down_angle))
-	_set_rotation("right_upper_arm", Vector3(right_arm_swing, 0.0, -arm_down_angle))
+	_set_rotation("left_upper_arm", Vector3(left_arm_swing, 0.0, -arm_down_angle))
+	_set_rotation("right_upper_arm", Vector3(right_arm_swing, 0.0, arm_down_angle))
 
 	var left_elbow: float = 0.12 + max(0.0, stride) * 0.20 * run_weight
 	var right_elbow: float = 0.12 + max(0.0, opposite_stride) * 0.20 * run_weight
